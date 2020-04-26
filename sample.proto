@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package sample;
+
+service HelloWorldService {
+  rpc Test(TestRequest) returns (TestResponse) {}
+}
+
+message TestRequest {
+  string query = 1;
+}
+
+message TestResponse {
+  string message = 1;
+}
