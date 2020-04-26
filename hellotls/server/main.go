@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	port = ":12341"
+	port = ":12342"
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -43,24 +43,3 @@ func main() {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
-
-/*func getServerOptions() ([]grpc.ServerOption, error) {
-	tlsCer, err := tls.LoadX509KeyPair(tlsDir+"tls.crt", tlsDir+"tls.key")
-	if err != nil {
-		logger.WithError(err).Fatal("failed to generate credentials")
-	}
-
-	cfg := &tls.Config{
-		Certificates: []tls.Certificate{tlsCer},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		GetConfigForClient: func(*tls.ClientHelloInfo) (*tls.Config, error) {
-			return &tls.Config{
-				Certificates: []tls.Certificate{tlsCer},
-				ClientAuth:   tls.RequireAndVerifyClientCert,
-				ClientCAs:    h.caCertPool,
-			}, nil
-		},
-	}
-	// Add options for creds and OpenCensus stats handler to enable stats and tracing.
-	return []grpc.ServerOption{grpc.Creds(credentials.NewTLS(cfg)), grpc.StatsHandler(&ocgrpc.ServerHandler{})}
-}*/
