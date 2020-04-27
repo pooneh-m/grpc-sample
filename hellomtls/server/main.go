@@ -64,6 +64,13 @@ func getServerOptions() grpc.ServerOption {
 		Certificates: []tls.Certificate{tlsCer},
 		ClientAuth:   tls.RequireAndVerifyClientCert,
 		ClientCAs:    certPool,
+		// GetConfigForClient: func(*tls.ClientHelloInfo) (*tls.Config, error) {
+		// 	return &tls.Config{
+		// 		Certificates: []tls.Certificate{tlsCer},
+		// 		ClientAuth:   tls.RequireAndVerifyClientCert,
+		// 		ClientCAs:    certPool,
+		// 	}, nil
+		// },
 	}
 	// Add options for creds and OpenCensus stats handler to enable stats and tracing.
 	return grpc.Creds(credentials.NewTLS(cfg))
