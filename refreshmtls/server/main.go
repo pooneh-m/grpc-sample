@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net"
+	"time"
 
 	pb "grpc-sample/sample"
 
@@ -15,7 +17,7 @@ import (
 )
 
 const (
-	port = ":12343"
+	port = ":12344"
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -35,7 +37,8 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	opts := getServerOptions()
+	tlsConfig := getTLSConfig()
+	opts := grpc.Creds(credentials.NewTLS(tlsConfig))
 	s := grpc.NewServer(opts)
 
 	pb.RegisterHelloWorldServiceServer(s, &server{})
@@ -44,7 +47,7 @@ func main() {
 	}
 }
 
-func getServerOptions() grpc.ServerOption {
+func getTLSConfig() *tls.Config {
 	tlsCer, err := tls.LoadX509KeyPair("../creds/service.pem", "../creds/service.key")
 	if err != nil {
 		log.Fatalf("Failed to generate credentials: %v", err)
@@ -60,19 +63,31 @@ func getServerOptions() grpc.ServerOption {
 		log.Fatal("failed to append client certs")
 	}
 
-	cfg := &tls.Config{
+	return &tls.Config{
 		Certificates: []tls.Certificate{tlsCer},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    certPool,
+		ClientAuth:   tls.RequireAnyClientCert,
+		VerifyPeerCertificate: func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+			log.Print("Verifying peer certificate")
+			opts := x509.VerifyOptions{
+				Roots:         certPool,
+				CurrentTime:   time.Now(),
+				Intermediates: x509.NewCertPool(),
+				KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+			}
 
-		// By commenting out GetConfigForClient the sample works for C# client
-		GetConfigForClient: func(*tls.ClientHelloInfo) (*tls.Config, error) {
-			return &tls.Config{
-				Certificates: []tls.Certificate{tlsCer},
-				ClientAuth:   tls.RequireAndVerifyClientCert,
-				ClientCAs:    certPool,
-			}, nil
+			for _, cert := range rawCerts[1:] {
+				opts.Intermediates.AppendCertsFromPEM(cert)
+			}
+
+			c, err := x509.ParseCertificate(rawCerts[0])
+			if err != nil {
+				return errors.New("tls: failed to verify client certificate: " + err.Error())
+			}
+			_, err = c.Verify(opts)
+			if err != nil {
+				return errors.New("tls: failed to verify client certificate: " + err.Error())
+			}
+			return nil
 		},
 	}
-	return grpc.Creds(credentials.NewTLS(cfg))
 }

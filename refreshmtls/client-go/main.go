@@ -19,7 +19,7 @@ func main() {
 	certFile := "../creds/client.pem"
 	cacertFile := "../creds/service.pem"
 
-	endpoint := "localhost:12343"
+	endpoint := "localhost:12344"
 	cert, err := ioutil.ReadFile(certFile)
 	if err != nil {
 		panic(err)
